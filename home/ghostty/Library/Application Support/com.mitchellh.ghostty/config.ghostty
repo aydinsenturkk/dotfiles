@@ -1,0 +1,31 @@
+# Ghostty — only settings that differ from the defaults and are actually wanted go here.
+# This file sits at the macOS default location and Cmd+, opens it (a symlink into the repo). Ghostty also reads
+# ~/.config/ghostty/config(.ghostty) from XDG; this file loads after it and wins on conflict.
+# So there must be no separate config file under XDG.
+# After a change: Ghostty menu → Reload Configuration. Spacing settings only show up in a new window.
+# All options: ghostty +show-config --default --docs
+# Validate:    ghostty +validate-config
+#
+# Note: the setting that turns Option into Alt is deliberately absent. On a Turkish Q keyboard Option types
+# characters such as @, #, [ and ]; turning it into Alt would make them impossible to type.
+# Font family: JetBrains Mono (Ghostty's default), so there is no line for it.
+
+# Font size: the default 13 felt small; 16 (three Cmd+= steps up).
+font-size = 16
+
+# Colors: github.com's dark theme; crisp but calm (less visual noise in Claude Code).
+theme = GitHub Dark Default
+
+# Roomy layout: space at the window edges and a little breathing room between lines.
+window-padding-x = 16
+window-padding-y = 12
+window-padding-balance = true
+adjust-cell-height = 10%
+
+# New windows always open in ~; new tabs and splits inherit the focused terminal's directory.
+working-directory = home
+window-inherit-working-directory = false
+
+# Don't show the progress bar programs send (e.g. while Claude Code is working):
+# the animation sliding back and forth at the top of the window is distracting.
+progress-style = false

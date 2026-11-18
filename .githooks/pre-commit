@@ -1,0 +1,11 @@
+#!/bin/zsh
+# Scans staged changes for secrets and stops the commit if it finds any.
+# Enable with: ./bootstrap.sh hooks
+
+gitleaks=${commands[gitleaks]:-/opt/homebrew/bin/gitleaks}
+if [[ ! -x $gitleaks ]]; then
+  print -u2 "pre-commit: gitleaks not found (brew install gitleaks)"
+  exit 1
+fi
+
+exec $gitleaks git --pre-commit --staged --redact --no-banner .

@@ -1,0 +1,11 @@
+# macOS
+.DS_Store
+
+# Machine-specific and secret files never go into the repo
+*.local
+*.pem
+*token*
+*secret*
+
+# Backups made by bootstrap.sh link
+.dotfiles-backup/

@@ -1,0 +1,20 @@
+# Git reads ~/.config/git/config on its own (XDG). There must be no ~/.gitconfig; if there is, it takes precedence.
+
+[user]
+	name = Aydın Şentürk
+	email = hello@aydinsenturk.com
+
+[init]
+	defaultBranch = main
+
+[push]
+	autoSetupRemote = true   # the first `git push` sets up the upstream by itself
+
+# GitHub credentials come from gh (`gh auth login`). The empty `helper =` resets earlier helpers.
+# Other hosts use the system osxkeychain helper.
+[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !gh auth git-credential

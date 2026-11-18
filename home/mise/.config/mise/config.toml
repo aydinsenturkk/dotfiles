@@ -1,0 +1,14 @@
+# Global language versions. For a per-project version use mise.toml in the project (or .nvmrc / .node-version for Node).
+# Install and update: ./bootstrap.sh runtimes, then `mise upgrade` when needed.
+
+[tools]
+node = "lts"
+pnpm = "latest"
+go = "latest"
+bun = "latest"
+# Global CLIs (formerly `npm i -g` under nvm). For rarely used ones, `npx <package>` is enough.
+"npm:yarn" = "1"                # yarn classic; yarn 4 projects run their own version via yarnPath
+"npm:@nestjs/cli" = "latest"    # `nest`
+
+[settings]
+idiomatic_version_file_enable_tools = ["node"]   # read .nvmrc and .node-version

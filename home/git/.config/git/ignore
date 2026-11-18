@@ -1,0 +1,10 @@
+# Applies to every repo. Git reads this file as the XDG default; no core.excludesFile needed.
+.DS_Store
+
+# mise's machine-local project settings (e.g. the project's AWS profile); never committed anywhere
+mise.local.toml
+.mise.local.toml
+
+# Claude Code's machine-local files
+**/.claude/settings.local.json
+**/.claude/.cc-writes/
