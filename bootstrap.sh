@@ -87,7 +87,8 @@ step_link() {
 step_runtimes() {
   /opt/homebrew/bin/mise install
   /opt/homebrew/bin/uv python install --default   # --default: also puts python and python3 in ~/.local/bin
-  if [[ -x /opt/homebrew/bin/nvim ]]; then /opt/homebrew/bin/nvim --headless +qa; fi   # plugins and parsers (home/nvim)
+  # Plugins and parsers (home/nvim). PATH: the run that installs Homebrew has no /opt/homebrew/bin yet (tree-sitter).
+  if [[ -x /opt/homebrew/bin/nvim ]]; then PATH=/opt/homebrew/bin:$PATH /opt/homebrew/bin/nvim --headless +qa; fi
   say "runtimes: mise, uv and nvim done"
 }
 

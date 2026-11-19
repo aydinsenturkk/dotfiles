@@ -92,3 +92,11 @@ teardown() { teardown_tmp_home; }
   run zsh_in_tmp -il -c 'alias vim'
   [ "$output" = "vim=nvim" ] || { echo "$output"; false; }
 }
+
+@test "without nvim there is no EDITOR and vim stays the real vim" {
+  # zsh -f skips /etc/zprofile, whose path_helper would add /opt/homebrew/bin from /etc/paths.d.
+  run env -i HOME="$TMP_HOME" HOMEBREW_PREFIX=/nonexistent PATH=/usr/bin:/bin TERM=xterm-256color \
+    /bin/zsh -f -c 'cd; source ~/.zshenv; source ~/.zprofile; source ~/.zshrc; print -r -- "editor=${EDITOR-unset}"; whence -w vim'
+  [[ "$output" == *"editor=unset"* ]] || { echo "$output"; false; }
+  [[ "$output" == *"vim: command"* ]] || { echo "$output"; false; }
+}

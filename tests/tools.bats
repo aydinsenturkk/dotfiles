@@ -116,12 +116,32 @@ nvim_lua() { nvim --headless -c "lua $1" +qa 2>&1; }
   [ "$status" -eq 0 ] && [ -z "$stderr" ] || { echo "$stderr"; false; }
 }
 
-@test "vim.pack lockfile stays a symlink into the repo" {
-  nvim --headless +qa
-  [ -L "$HOME/.config/nvim/nvim-pack-lock.json" ]
-  [ "$(readlink -f "$HOME/.config/nvim/nvim-pack-lock.json")" = "$REPO/home/nvim/.config/nvim/nvim-pack-lock.json" ]
+@test "vim.pack lockfile stays a symlink into the repo when vim.pack writes it" {
+  lock=$HOME/.config/nvim/nvim-pack-lock.json
+  before=$(stat -f %m "$REPO/home/nvim/.config/nvim/nvim-pack-lock.json")
+  sleep 1
+  nvim --headless -c "lua vim.pack.update(nil, { offline = true, target = 'lockfile', force = true })" +qa
+  [ "$(stat -f %m "$REPO/home/nvim/.config/nvim/nvim-pack-lock.json")" -gt "$before" ] || { echo "vim.pack did not write the lockfile"; false; }
+  [ -L "$lock" ]
+  [ "$(readlink -f "$lock")" = "$REPO/home/nvim/.config/nvim/nvim-pack-lock.json" ]
 }
 
 @test "bootstrap installs nvim plugins and parsers" {
-  sed -n '/^step_runtimes/,/^}/p' "$REPO/bootstrap.sh" | grep -q 'nvim --headless +qa'
+  # The run that installs Homebrew has no /opt/homebrew/bin on PATH; nvim-treesitter needs tree-sitter from there.
+  sed -n '/^step_runtimes/,/^}/p' "$REPO/bootstrap.sh" | grep -qF 'PATH=/opt/homebrew/bin:$PATH /opt/homebrew/bin/nvim --headless +qa'
+}
+
+@test "headless nvim fails loudly when parsers cannot be built" {
+  t=$(mktemp -d); mkdir -p "$t/data/nvim/site"
+  ln -s "$HOME/.local/share/nvim/site/pack" "$t/data/nvim/site/pack"   # plugins as installed, parsers missing
+  run env XDG_CONFIG_HOME="$REPO/home/nvim/.config" XDG_DATA_HOME="$t/data" XDG_STATE_HOME="$t/state" \
+    XDG_CACHE_HOME="$t/cache" PATH=/usr/bin:/bin /opt/homebrew/bin/nvim --headless +qa   # no tree-sitter on PATH
+  rm -rf "$t"
+  [ "$status" -ne 0 ] || { echo "exit 0 although no parser could be built"; false; }
+}
+
+@test "updating nvim-treesitter also updates the parsers (TSUpdate)" {
+  out=$(nvim --headless -c "lua vim.api.nvim_create_user_command('TSUpdate', function() io.write('TSUpdate ran') end, { force = true })" \
+    -c "lua vim.api.nvim_exec_autocmds('PackChanged', { data = { kind = 'update', active = true, spec = { name = 'nvim-treesitter' }, path = '' } })" +qa 2>&1)
+  [[ "$out" == *"TSUpdate ran"* ]] || { echo "$out"; false; }
 }
