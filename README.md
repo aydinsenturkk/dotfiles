@@ -66,7 +66,7 @@ After the first run:
 2. Fill in `~/.zshrc.local` (see [Secrets](#secrets)).
 3. Install the App Store apps (Xcode, TestFlight, iWork, password manager, chat apps).
 4. Sign in to VS Code Settings Sync; settings and extensions come from there.
-5. Open OrbStack once (Docker and Kubernetes).
+5. Open OrbStack once (Docker and Kubernetes) and Pesty once (allow Accessibility so Shift+Cmd+V can paste).
 
 ## Daily use
 

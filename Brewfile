@@ -3,6 +3,9 @@
 # `brew bundle --no-upgrade --file=~/Github/dotfiles/Brewfile` (or `./bootstrap.sh brew`).
 # Language versions (Node, pnpm, Go, Bun) are not here but in mise: home/mise/.config/mise/config.toml
 
+# Taps
+tap "momenbasel/pesty"          # Pesty; not in the main cask repo
+
 # Core CLI
 brew "stow"                     # symlinks the dotfiles into ~
 brew "gitleaks"                 # secret scan before each commit
@@ -41,6 +44,7 @@ cask "basictex"                 # LaTeX for PDF output with pandoc
 
 # Apps
 cask "ghostty"                  # terminal
+cask "momenbasel/pesty/pesty"   # clipboard history on Shift+Cmd+V (Paste-style strip)
 cask "orbstack"                 # container and Kubernetes engine
 cask "tableplus"                # database GUI
 cask "fork"                     # git GUI

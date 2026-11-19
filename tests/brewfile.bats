@@ -28,3 +28,8 @@ load test_helper
   # A second run must change nothing; updating is an explicit `brew upgrade`.
   grep -qE '^[[:space:]]*\$brew bundle .*--no-upgrade' "$REPO/bootstrap.sh"
 }
+
+@test "clipboard manager (Pesty) comes from its own tap" {
+  grep -qE '^tap "momenbasel/pesty"( |$)' "$REPO/Brewfile"
+  grep -qE '^cask "momenbasel/pesty/pesty"' "$REPO/Brewfile"
+}
