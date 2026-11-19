@@ -43,8 +43,10 @@ brew "pandoc"
 cask "basictex"                 # LaTeX for PDF output with pandoc
 
 # Apps
+cask "visual-studio-code"       # editor; settings and extensions come from Settings Sync
 cask "ghostty"                  # terminal
 cask "momenbasel/pesty/pesty"   # clipboard history on Shift+Cmd+V (Paste-style strip)
+cask "rectangle"                # window snapping with keyboard shortcuts
 cask "orbstack"                 # container and Kubernetes engine
 cask "tableplus"                # database GUI
 cask "fork"                     # git GUI

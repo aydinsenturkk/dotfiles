@@ -14,7 +14,7 @@ load test_helper
 
 @test "core tools are in the Brewfile" {
   for p in stow gitleaks bats-core mise uv starship eza bat fd fzf zoxide ripgrep gh cocoapods \
-           zsh-autosuggestions zsh-syntax-highlighting zsh-completions ghostty orbstack tableplus; do
+           zsh-autosuggestions zsh-syntax-highlighting zsh-completions ghostty orbstack tableplus visual-studio-code rectangle; do
     grep -qE "^(brew|cask) \"$p\"" "$REPO/Brewfile" || { echo "missing: $p"; false; }
   done
 }
