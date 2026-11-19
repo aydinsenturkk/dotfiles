@@ -25,6 +25,9 @@ defaults write com.apple.finder ShowPathbar -bool true                      # fo
 defaults write NSGlobalDomain AppleShowAllExtensions -bool true             # show all file extensions
 defaults write com.apple.desktopservices DSDontWriteNetworkStores -bool true # no .DS_Store on network shares
 defaults write com.apple.desktopservices DSDontWriteUSBStores -bool true     # no .DS_Store on USB drives
+defaults write com.apple.finder ShowStatusBar -bool true                    # item count and free space at the bottom
+defaults write com.apple.finder FXEnableExtensionChangeWarning -bool false  # no warning when changing an extension
+chflags nohidden "$HOME/Library"                                            # show ~/Library
 
 # Trackpad and typing
 defaults write com.apple.AppleMultitouchTrackpad Clicking -bool true                 # tap to click
@@ -34,11 +37,20 @@ defaults write NSGlobalDomain NSAutomaticCapitalizationEnabled -bool false      
 defaults write NSGlobalDomain NSAutomaticSpellingCorrectionEnabled -bool false        # no autocorrect
 defaults write NSGlobalDomain KeyRepeat -int 2                                        # fast key repeat
 defaults write NSGlobalDomain InitialKeyRepeat -int 15                                # short delay before repeat
+defaults write NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled -bool false        # no smart quotes (pasted code keeps " and ')
+defaults write NSGlobalDomain NSAutomaticDashSubstitutionEnabled -bool false         # no smart dashes (-- stays --)
+defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode -bool true          # save dialogs open expanded
+defaults write NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 -bool true
 
 # Appearance and windows
 defaults write NSGlobalDomain AppleInterfaceStyle -string Dark                # dark mode
 defaults write com.apple.WindowManager EnableTiledWindowMargins -bool false   # no margins between tiled windows
 defaults write com.apple.WindowManager HideDesktop -bool true                 # hide desktop items
+
+# Screenshots: their own folder instead of the desktop, without the window shadow
+mkdir -p "$HOME/Pictures/Screenshots"
+defaults write com.apple.screencapture location -string "$HOME/Pictures/Screenshots"
+defaults write com.apple.screencapture disable-shadow -bool true
 
 # Apply the changes (open Finder windows are reopened).
 killall Dock Finder SystemUIServer 2>/dev/null || true

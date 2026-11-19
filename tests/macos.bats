@@ -28,6 +28,12 @@ check() {
 @test "NSGlobalDomain AppleShowAllExtensions = 1" { check NSGlobalDomain AppleShowAllExtensions 1; }
 @test "com.apple.desktopservices DSDontWriteNetworkStores = 1" { check com.apple.desktopservices DSDontWriteNetworkStores 1; }
 @test "com.apple.desktopservices DSDontWriteUSBStores = 1" { check com.apple.desktopservices DSDontWriteUSBStores 1; }
+@test "com.apple.finder ShowStatusBar = 1" { check com.apple.finder ShowStatusBar 1; }
+@test "com.apple.finder FXEnableExtensionChangeWarning = 0" { check com.apple.finder FXEnableExtensionChangeWarning 0; }
+@test "Library folder in home is visible in Finder" {
+  grep -qF 'chflags nohidden "$HOME/Library"' "$REPO/macos.sh"
+  [[ "$(ls -lOd "$HOME/Library")" != *hidden* ]]
+}
 
 # Trackpad and typing
 @test "com.apple.AppleMultitouchTrackpad Clicking = 1" { check com.apple.AppleMultitouchTrackpad Clicking 1; }
@@ -37,6 +43,18 @@ check() {
 @test "NSGlobalDomain NSAutomaticSpellingCorrectionEnabled = 0" { check NSGlobalDomain NSAutomaticSpellingCorrectionEnabled 0; }
 @test "NSGlobalDomain KeyRepeat = 2" { check NSGlobalDomain KeyRepeat 2; }
 @test "NSGlobalDomain InitialKeyRepeat = 15" { check NSGlobalDomain InitialKeyRepeat 15; }
+@test "NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled = 0" { check NSGlobalDomain NSAutomaticQuoteSubstitutionEnabled 0; }
+@test "NSGlobalDomain NSAutomaticDashSubstitutionEnabled = 0" { check NSGlobalDomain NSAutomaticDashSubstitutionEnabled 0; }
+@test "NSGlobalDomain NSNavPanelExpandedStateForSaveMode = 1" { check NSGlobalDomain NSNavPanelExpandedStateForSaveMode 1; }
+@test "NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 = 1" { check NSGlobalDomain NSNavPanelExpandedStateForSaveMode2 1; }
+
+# Screenshots
+@test "com.apple.screencapture location = ~/Pictures/Screenshots" { check com.apple.screencapture location "$HOME/Pictures/Screenshots"; }
+@test "com.apple.screencapture disable-shadow = 1" { check com.apple.screencapture disable-shadow 1; }
+@test "screenshot folder exists" {
+  grep -qF 'mkdir -p "$HOME/Pictures/Screenshots"' "$REPO/macos.sh"
+  [ -d "$HOME/Pictures/Screenshots" ]
+}
 
 # Appearance and windows
 @test "NSGlobalDomain AppleInterfaceStyle = Dark" { check NSGlobalDomain AppleInterfaceStyle Dark; }
