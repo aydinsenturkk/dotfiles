@@ -26,6 +26,8 @@ brew "bat"                      # instead of cat
 brew "fd"                       # instead of find
 brew "ripgrep"                  # instead of grep
 brew "git-delta"                # colored, line-numbered git diffs in the terminal
+brew "neovim"                   # terminal editor (EDITOR); config in home/nvim
+brew "tree-sitter-cli"          # compiles the parsers Neovim uses for highlighting
 
 # Development
 brew "awscli"

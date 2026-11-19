@@ -21,3 +21,6 @@ if (( $+commands[mise] )); then eval "$(mise activate zsh --shims)"; fi
 # OrbStack: docker, kubectl, orb commands and completions. OrbStack manages init.zsh.
 # Keep the line exactly as OrbStack wrote it; if it changes, OrbStack may not recognize it and add it again.
 source ~/.orbstack/shell/init.zsh 2>/dev/null || :
+
+# Editor for git commit, crontab -e and the like (nvim config: home/nvim).
+if (( $+commands[nvim] )); then export EDITOR=nvim VISUAL=nvim; fi

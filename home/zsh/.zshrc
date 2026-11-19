@@ -7,6 +7,7 @@ SAVEHIST=50000
 setopt share_history hist_ignore_all_dups hist_ignore_space hist_reduce_blanks
 setopt extended_history   # timestamps; the existing history uses this format, so they survive when the file is rewritten
 setopt interactive_comments no_beep
+bindkey -e   # emacs keys (Ctrl+A/E/R); zsh would pick vi mode because EDITOR=nvim contains "vi"
 
 # Completion: compinit once. Full scan at most once a day; other starts use the cache (-C).
 [[ -d $HOMEBREW_PREFIX/share/zsh-completions ]] && fpath=($HOMEBREW_PREFIX/share/zsh-completions $fpath)

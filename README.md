@@ -23,6 +23,7 @@ linked into `~` with GNU Stow, and everything is covered by tests.
 | `home/git` | `~/.config/git/config` (identity, GitHub credentials via gh, delta pager, pull rebase), global ignore |
 | `home/ghostty` | Ghostty: GitHub Dark Default, JetBrains Mono 16, roomy spacing |
 | `home/starship` | Prompt |
+| `home/nvim` | Neovim for quick edits and reading code: key hints (which-key), Tree-sitter highlighting, fzf search |
 | `home/mise` | Node LTS, pnpm, Go, Bun, yarn 1, NestJS CLI |
 | `tests/` | bats tests |
 
@@ -54,7 +55,7 @@ The steps run in order, and each one is skipped if it is already done:
 | `clt` | Xcode Command Line Tools (if the installer opens, run bootstrap again when it finishes) |
 | `brew` | Homebrew in `/opt/homebrew`, then the `Brewfile` (installs what is missing, never upgrades) |
 | `link` | Symlinks the packages under `home/` into `~` (stow `--no-folding`). Existing files are moved to `~/.dotfiles-backup/<time>/`, never deleted |
-| `runtimes` | `mise install` and `uv python install --default` |
+| `runtimes` | `mise install`, `uv python install --default`, Neovim plugins and parsers |
 | `hooks` | Enables the gitleaks pre-commit hook |
 | `--macos` | Runs `macos.sh` at the end |
 
@@ -80,9 +81,9 @@ After the first run:
   Each account is a named profile in `~/.aws/config` (`[profile client-a]`). In the project folder, create `mise.local.toml` with
   `AWS_PROFILE = "client-a"` under `[env]`, then run `mise trust`. Entering the folder selects the profile and leaving clears it;
   the prompt shows the active profile and region. `mise.local.toml` is in the global git ignore, so it never gets committed.
-- **Ghostty config:** open it with Cmd+, (it is the repo file), save, then Ghostty menu → Reload Configuration. Spacing changes only show in a new window.
-  Don't create a separate config under `~/.config/ghostty/`.
+- **Ghostty config:** open it with Cmd+, (it is the repo file), save, then Ghostty menu → Reload Configuration. Spacing changes only show in a new window. No second config under `~/.config/ghostty/`.
 - **macOS preferences:** add a `defaults write` line to `macos.sh` and run `./macos.sh`.
+- **Neovim** (`EDITOR`; `vim` runs it): press Space and wait for key hints; Space k searches every key map. Tutorial: `vimtutor tr`.
 - **Machine-specific settings:** `~/.zshrc.local` (not in the repo, loaded last).
 
 ## Secrets
@@ -109,9 +110,8 @@ identity, Docker on OrbStack, the Ghostty config location and no secrets in the 
 
 ## Troubleshooting
 
-- Slow shell: `time zsh -i -c exit`. For details, temporarily add `zmodload zsh/zprof` as the first line of `~/.zshrc`
-  and `zprof` as the last, then open a new shell.
-- `brew bundle check --file=Brewfile`: is everything in the Brewfile installed?
+- Slow shell: `time zsh -i -c exit`; for details put `zmodload zsh/zprof` first and `zprof` last in `~/.zshrc`, then open a new shell.
+- `brew bundle check --no-upgrade --file=Brewfile`: is everything in the Brewfile installed?
 - compinit warns about insecure directories: `chmod go-w /opt/homebrew/share` (`./bootstrap.sh brew` does this).
 - Old config files that were moved aside: `~/.dotfiles-backup/`.
 

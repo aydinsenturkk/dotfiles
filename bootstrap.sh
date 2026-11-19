@@ -87,7 +87,8 @@ step_link() {
 step_runtimes() {
   /opt/homebrew/bin/mise install
   /opt/homebrew/bin/uv python install --default   # --default: also puts python and python3 in ~/.local/bin
-  say "runtimes: mise and uv done"
+  if [[ -x /opt/homebrew/bin/nvim ]]; then /opt/homebrew/bin/nvim --headless +qa; fi   # plugins and parsers (home/nvim)
+  say "runtimes: mise, uv and nvim done"
 }
 
 # Enables the repo's git hooks (gitleaks).

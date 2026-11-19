@@ -81,3 +81,47 @@ GHOSTTY_CONF="$REPO/home/ghostty/Library/Application Support/com.mitchellh.ghost
   grep -q 'new window' "$GHOSTTY_CONF" || { echo "config: new window note missing"; false; }
   grep -A1 'Ghostty config' "$REPO/README.md" | grep -q 'new window' || { echo "README: new window note missing"; false; }
 }
+
+# Neovim (real home; plugins and parsers were installed by `nvim --headless +qa`)
+nvim_lua() { nvim --headless -c "lua $1" +qa 2>&1; }
+
+@test "nvim config loads without errors" {
+  run --separate-stderr nvim --headless +qa
+  [ "$status" -eq 0 ] && [ -z "$stderr" ] || { echo "status=$status stderr=$stderr"; false; }
+}
+
+@test "which-key, fzf-lua and nvim-treesitter are loaded" {
+  out=$(nvim_lua 'for _, m in ipairs({"which-key", "fzf-lua", "nvim-treesitter"}) do io.write(m, "=", tostring(package.loaded[m] ~= nil), " ") end')
+  [ "$out" = "which-key=true fzf-lua=true nvim-treesitter=true " ] || { echo "$out"; false; }
+}
+
+@test "leader maps exist and have descriptions for which-key" {
+  for k in f g b r k h; do
+    out=$(nvim_lua "io.write(vim.fn.maparg(' $k', 'n', false, true).desc or '')")
+    [ -n "$out" ] || { echo "no desc for <leader>$k"; false; }
+  done
+}
+
+@test "treesitter highlights TypeScript" {
+  f=$(mktemp -d)/a.ts; echo 'const a: number = 1' > "$f"
+  out=$(nvim --headless -c 'lua io.write(tostring(vim.treesitter.highlighter.active[vim.api.nvim_get_current_buf()] ~= nil))' +qa "$f" 2>&1)
+  rm -r "${f%/*}"
+  [ "$out" = "true" ] || { echo "$out"; false; }
+}
+
+@test "a filetype without a parser opens without errors" {
+  f=$(mktemp -d)/a.unknownext; echo hi > "$f"
+  run --separate-stderr nvim --headless -c 'set filetype=nosuchlang' +qa "$f"
+  rm -r "${f%/*}"
+  [ "$status" -eq 0 ] && [ -z "$stderr" ] || { echo "$stderr"; false; }
+}
+
+@test "vim.pack lockfile stays a symlink into the repo" {
+  nvim --headless +qa
+  [ -L "$HOME/.config/nvim/nvim-pack-lock.json" ]
+  [ "$(readlink -f "$HOME/.config/nvim/nvim-pack-lock.json")" = "$REPO/home/nvim/.config/nvim/nvim-pack-lock.json" ]
+}
+
+@test "bootstrap installs nvim plugins and parsers" {
+  sed -n '/^step_runtimes/,/^}/p' "$REPO/bootstrap.sh" | grep -q 'nvim --headless +qa'
+}

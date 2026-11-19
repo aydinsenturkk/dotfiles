@@ -7,3 +7,4 @@ if (( $+commands[eza] )); then
   alias tree='eza --tree'
 fi
 if (( $+commands[bat] )); then alias cat='bat --paging=never'; fi
+if (( $+commands[nvim] )); then alias vim='nvim'; fi   # stock vim stays at /usr/bin/vim (and vimtutor)

@@ -68,7 +68,7 @@ real_shell() {
   run "$REPO/bootstrap.sh" link
   [ "$status" -eq 0 ]
   [ "$(ls -1 "$HOME/.dotfiles-backup" 2>/dev/null | wc -l)" -eq "$before" ]
-  brew bundle check --file="$REPO/Brewfile"
+  brew bundle check --no-upgrade --file="$REPO/Brewfile"   # outdated is fine: bootstrap never upgrades
 }
 
 @test "no secrets in repo history" {

@@ -77,3 +77,18 @@ teardown() { teardown_tmp_home; }
   # With ~/.hushlogin present, login does not print "Last login: … on ttys00N".
   [ -f "$TMP_HOME/.hushlogin" ] && [ -L "$TMP_HOME/.hushlogin" ]
 }
+
+@test "EDITOR and VISUAL are nvim" {
+  run zsh_in_tmp -il -c 'print -r -- "$EDITOR $VISUAL"'
+  [ "$output" = "nvim nvim" ] || { echo "$output"; false; }
+}
+
+@test "zsh stays in the emacs keymap although EDITOR contains vi" {
+  run zsh_in_tmp -il -c 'bindkey -lL main'
+  [[ "$output" == *emacs* ]] || { echo "$output"; false; }
+}
+
+@test "vim runs nvim" {
+  run zsh_in_tmp -il -c 'alias vim'
+  [ "$output" = "vim=nvim" ] || { echo "$output"; false; }
+}
