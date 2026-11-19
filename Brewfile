@@ -25,6 +25,7 @@ brew "eza"                      # instead of ls / tree
 brew "bat"                      # instead of cat
 brew "fd"                       # instead of find
 brew "ripgrep"                  # instead of grep
+brew "git-delta"                # colored, line-numbered git diffs in the terminal
 
 # Development
 brew "awscli"

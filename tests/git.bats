@@ -48,3 +48,31 @@ teardown() { teardown_tmp_home; }
   git -C "$r" check-ignore -q mise.local.toml
   git -C "$r" check-ignore -q .mise.local.toml
 }
+
+@test "merge, rebase and diff defaults" {
+  [ "$(git config --global pull.rebase)" = "true" ]
+  [ "$(git config --global rebase.autoStash)" = "true" ]
+  [ "$(git config --global fetch.prune)" = "true" ]
+  [ "$(git config --global rerere.enabled)" = "true" ]
+  [ "$(git config --global diff.algorithm)" = "histogram" ]
+  [ "$(git config --global diff.colorMoved)" = "default" ]
+  [ "$(git config --global merge.conflictStyle)" = "zdiff3" ]
+  [ "$(git config --global branch.sort)" = "-committerdate" ]
+}
+
+@test "delta is the pager" {
+  [ "$(git config --global core.pager)" = "delta" ]
+  [ "$(git config --global interactive.diffFilter)" = "delta --color-only" ]
+  [ "$(git config --global delta.navigate)" = "true" ]
+  [ "$(git config --global delta.line-numbers)" = "true" ]
+  [ "$(git config --global delta.dark)" = "true" ]
+}
+
+@test "piped git diff has no color codes (what Claude Code and other tools see)" {
+  r=$TMP_HOME/repo; git init -q "$r"
+  echo one > "$r/f"; git -C "$r" add f; git -C "$r" -c user.name=t -c user.email=t@t commit -qm init
+  echo two > "$r/f"
+  out=$(git -C "$r" diff | cat)
+  [[ $out == *two* ]] || { echo "no diff: $out"; false; }
+  [[ $out != *$'\e'* ]] || { echo "color codes in piped output"; false; }
+}

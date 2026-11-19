@@ -18,3 +18,30 @@
 [credential "https://gist.github.com"]
 	helper =
 	helper = !gh auth git-credential
+
+[pull]
+	rebase = true            # replay local commits on top of the remote instead of a merge commit
+[rebase]
+	autoStash = true         # stash uncommitted changes before a rebase and restore them after
+[fetch]
+	prune = true             # drop local refs to branches deleted on the remote
+[rerere]
+	enabled = true           # remember how a conflict was resolved and reuse it
+[diff]
+	algorithm = histogram    # more readable diffs
+	colorMoved = default     # moved lines get their own color
+[merge]
+	conflictStyle = zdiff3   # conflicts also show the common ancestor
+[branch]
+	sort = -committerdate    # `git branch` lists the most recent branches first
+
+# delta pages diff, log -p and show. Git only uses a pager on a terminal, so piped output
+# (Claude Code, scripts, Fork, VS Code) stays plain. In delta: n / N jump between files.
+[core]
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only
+[delta]
+	navigate = true
+	line-numbers = true
+	dark = true

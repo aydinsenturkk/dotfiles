@@ -20,7 +20,7 @@ linked into `~` with GNU Stow, and everything is covered by tests.
 | `macos.sh` | Dock, Finder, trackpad, keyboard, appearance and window preferences |
 | `.githooks/` | gitleaks pre-commit hook |
 | `home/zsh` | `.zshenv`, `.zprofile` (Homebrew, PATH, mise shims, OrbStack), `.zshrc` (history, completion, fzf, zoxide, mise, Starship, plugins), aliases, `.hushlogin` |
-| `home/git` | `~/.config/git/config` (identity, GitHub credentials via gh), global ignore |
+| `home/git` | `~/.config/git/config` (identity, GitHub credentials via gh, delta pager, pull rebase), global ignore |
 | `home/ghostty` | Ghostty: GitHub Dark Default, JetBrains Mono 16, roomy spacing |
 | `home/starship` | Prompt |
 | `home/mise` | Node LTS, pnpm, Go, Bun, yarn 1, NestJS CLI |
