@@ -208,3 +208,36 @@ BAR='vim.api.nvim_eval_statusline(vim.o.statusline, {}).str'
   out=$(nvim --headless -c 'set columns=100' -c "lua io.write($BAR)" +qa! "$d/file.ts" 2>&1)
   [[ "$out" == *"Space ? cheat sheet"* && "$out" == *"file.ts"* ]] || { echo "$out"; false; }
 }
+
+# Turkish Q keyboard. Keys are fed as typed ('t', nvim_input): langmap leaves keys that come from mappings alone.
+# Letters are Lua escapes: \u{131} dotless i, \u{11F}/\u{11E} g-breve, \u{FC}/\u{DC} u-umlaut, \u{15F}/\u{15E} s-cedilla.
+@test "Turkish Q keys run the vim command of the US key in the same place" {
+  f=$(mktemp); printf 'one two\n\nthree\n' > "$f"
+  out=$(perl -e 'alarm 20; exec @ARGV' nvim --headless \
+    -c "lua vim.api.nvim_feedkeys(vim.keycode('\u{131}<Cmd>lua io.write(vim.api.nvim_get_mode().mode, \"|\")<CR><Esc>'), 'xt', false)" \
+    -c "lua vim.api.nvim_feedkeys('gg\u{DC}', 'xt', false); io.write(vim.fn.line('.'), '|')" \
+    -c "lua vim.api.nvim_feedkeys(vim.keycode('\u{15E}lua io.write(\"cmdline|\")<CR>'), 'xt', false)" \
+    -c "lua vim.api.nvim_feedkeys('ggwd\u{131}w', 'xt', false); io.write(vim.fn.getline(1), '|')" \
+    -c "lua vim.api.nvim_feedkeys('gg\u{FC}\u{FC}', 'xt', false); io.write(vim.fn.line('.'), '|')" \
+    -c "lua vim.api.nvim_feedkeys('\u{11F}\u{11F}', 'xt', false); io.write(vim.fn.line('.'), '|')" \
+    -c "lua vim.api.nvim_feedkeys(vim.keycode('gg\u{FC}<Space>gg\u{11F}<Space>'), 'xt', false); io.write(vim.fn.line('$'))" \
+    +qa! "$f" 2>/dev/null)   # stderr has the command line
+  [ "$out" = "i|2|cmdline|one |3|1|5" ] || { echo "$out"; false; }
+}
+
+@test "Turkish letters still type themselves in insert mode, in search and after f and r" {
+  f=$(mktemp); printf 'x\n' > "$f"
+  out=$(perl -e 'alarm 20; exec @ARGV' nvim --headless \
+    -c "lua vim.api.nvim_feedkeys(vim.keycode('o\u{131}\u{11F}\u{FC}\u{15F}\u{11E}\u{DC}\u{15E} a<Esc>'), 'xt', false); io.write(tostring(vim.fn.getline(2) == '\u{131}\u{11F}\u{FC}\u{15F}\u{11E}\u{DC}\u{15E} a'), '|')" \
+    -c "lua vim.api.nvim_feedkeys('0f\u{FC}', 'xt', false); io.write(vim.fn.col('.'), '|')" \
+    -c "lua vim.api.nvim_feedkeys(vim.keycode('gg/\u{15F}<CR>'), 'xt', false); io.write(vim.fn.line('.'), ':', vim.fn.col('.'), '|')" \
+    -c "lua vim.api.nvim_feedkeys('0r\u{11F}', 'xt', false); io.write(tostring(vim.fn.getline(2):sub(1, 4) == '\u{11F}\u{11F}'))" \
+    +qa! "$f" 2>/dev/null)   # stderr has the search messages
+  [ "$out" = "true|5|2:7|true" ] || { echo "$out"; false; }
+}
+
+@test "Turkish letters reach a terminal job unchanged (the fzf prompt)" {
+  out=$(perl -e 'alarm 20; exec @ARGV' nvim --headless -c 'set noshowmode' -c "lua vim.fn.jobstart({ 'cat' }, { term = true })" \
+    -c "lua vim.api.nvim_input('i\u{131}\u{11F}\u{DC}<CR>'); vim.defer_fn(function() local text = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), ' '); io.write(tostring(text:find('\u{131}\u{11F}\u{DC}', 1, true) ~= nil), '|', tostring(text:find('i[}', 1, true) ~= nil)); vim.cmd('qa!') end, 1500)" 2>&1)
+  [ "$out" = "true|false" ] || { echo "$out"; false; }
+}

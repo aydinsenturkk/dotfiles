@@ -10,6 +10,13 @@ vim.o.ignorecase = true        -- search ignores case ...
 vim.o.smartcase = true         -- ... unless the pattern has a capital letter
 vim.o.clipboard = 'unnamedplus' -- yank and paste use the macOS clipboard (and Pesty)
 vim.o.scrolloff = 8            -- keep some lines visible above and below the cursor
+-- Turkish Q keyboard: in normal and visual mode the letters run the command of the US key in the same place.
+-- dotless i -> i, g-breve u-umlaut -> [ ], their capitals -> { }, s-cedilla -> ; and its capital -> :.
+-- Insert mode, the command line, search and f/t/r still get the letters.
+vim.o.langmap = '\u{131}i,\u{11F}[,\u{FC}],\u{11E}{,\u{DC}},\u{15F}\\;,\u{15E}:'
+-- langmap skips mappings for these two-byte letters, so g-breve and u-umlaut also map to [ and ] (]<Space>, ]q, which-key).
+vim.keymap.set({ 'n', 'x', 'o' }, '\u{11F}', '[', { remap = true })
+vim.keymap.set({ 'n', 'x', 'o' }, '\u{FC}', ']', { remap = true })
 
 -- Bottom bar: the basic keys of the current mode on the left; file, [+] if modified and line:column on the right.
 -- Keys are bold in the accent color, hints are split by │, and hints that don't fit are dropped from the end.
