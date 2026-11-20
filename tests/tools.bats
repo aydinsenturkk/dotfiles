@@ -174,7 +174,7 @@ BAR='vim.api.nvim_eval_statusline(vim.o.statusline, {}).str'
 @test "bottom bar changes with the mode in a real terminal" {
   t=$(mktemp -d)   # nvim in a pty: press i, then leave; the insert hints must be drawn
   (sleep 2; printf i; sleep 1; printf '\033:qa!\r') | perl -e 'alarm 20; exec @ARGV' script -q "$t/out" nvim "$REPO/README.md" >/dev/null 2>&1
-  grep -aq 'Esc normal mode' "$t/out" || { echo "insert-mode hints were never drawn"; false; }
+  grep -aq 'delete word' "$t/out" || { echo "insert-mode hints were never drawn"; false; }
 }
 
 @test "Space ? opens the cheat sheet in a floating window and q closes it" {
@@ -184,4 +184,10 @@ BAR='vim.api.nvim_eval_statusline(vim.o.statusline, {}).str'
 
 @test "cheat sheet is linked into the repo" {
   [ "$(readlink -f "$HOME/.config/nvim/cheatsheet.txt")" = "$REPO/home/nvim/.config/nvim/cheatsheet.txt" ]
+}
+
+@test "bottom bar shows the keys in their own color and separates the hints" {
+  # after a colorscheme reload too: it clears the groups the config made
+  out=$(nvim_lua "vim.cmd.colorscheme('default'); local s = vim.api.nvim_eval_statusline(vim.o.statusline, { highlights = true }); local at, group = s.str:find(':w save', 1, true) - 1; for _, h in ipairs(s.highlights) do if h.start <= at then group = h.group end end; local key, bar = vim.api.nvim_get_hl(0, { name = group, link = false }), vim.api.nvim_get_hl(0, { name = 'StatusLine', link = false }); io.write(tostring(key.fg ~= nil and key.fg ~= bar.fg and key.bg == bar.bg), '|', tostring(s.str:find('save │ :q quit', 1, true) ~= nil))")
+  [ "$out" = "true|true" ] || { echo "$out"; false; }
 }

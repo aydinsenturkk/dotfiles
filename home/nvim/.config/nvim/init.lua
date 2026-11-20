@@ -12,15 +12,25 @@ vim.o.clipboard = 'unnamedplus' -- yank and paste use the macOS clipboard (and P
 vim.o.scrolloff = 8            -- keep some lines visible above and below the cursor
 
 -- Bottom bar: the basic keys of the current mode on the left; file, [+] if modified and line:column on the right.
--- Hints that don't fit the window are dropped from the end. Inactive windows show only the right part.
+-- Keys are bold in the accent color, hints are split by │, and hints that don't fit are dropped from the end.
+-- Inactive windows show only the right part.
 local hints = {
-  n = { 'i insert', ':w save', ':q quit', 'Space ? cheat sheet', 'u undo', '/ search', 'v select', 'dd delete line',
-    'yy copy line', 'p paste' },
-  i = { 'Esc normal mode', 'Ctrl+W delete word', 'Ctrl+U delete to line start' },
-  v = { 'y copy', 'd delete', 'c change', '> indent', '< unindent', 'Esc cancel' },
-  c = { 'Enter run', 'Tab complete', 'Up previous command', 'Esc cancel' },
+  n = { { 'i', 'insert' }, { ':w', 'save' }, { ':q', 'quit' }, { 'Space ?', 'cheat sheet' }, { 'u', 'undo' },
+    { '/', 'search' }, { 'v', 'select' }, { 'dd', 'delete line' }, { 'yy', 'copy line' }, { 'p', 'paste' } },
+  i = { { 'Esc', 'normal mode' }, { 'Ctrl+W', 'delete word' }, { 'Ctrl+U', 'delete to line start' } },
+  v = { { 'y', 'copy' }, { 'd', 'delete' }, { 'c', 'change' }, { '>', 'indent' }, { '<', 'unindent' }, { 'Esc', 'cancel' } },
+  c = { { 'Enter', 'run' }, { 'Tab', 'complete' }, { 'Up', 'previous command' }, { 'Esc', 'cancel' } },
 }
 local modes = { n = 'NORMAL', i = 'INSERT', v = 'VISUAL', V = 'V-LINE', ['\22'] = 'V-BLOCK', c = 'COMMAND', R = 'REPLACE' }
+local function hint_colors()   -- on the bar's background; loading a colorscheme clears them, so they are made again
+  local get = function(name) return vim.api.nvim_get_hl(0, { name = name, link = false }) end
+  local bar = get('StatusLine')
+  vim.api.nvim_set_hl(0, 'KeyHintMode', { fg = bar.fg, bg = bar.bg, bold = true })
+  vim.api.nvim_set_hl(0, 'KeyHintKey', { fg = get('Function').fg, bg = bar.bg, bold = true })
+  vim.api.nvim_set_hl(0, 'KeyHintSep', { fg = get('Comment').fg, bg = bar.bg })
+end
+hint_colors()
+vim.api.nvim_create_autocmd('ColorScheme', { callback = hint_colors })
 function _G.key_hint_bar()
   local win = vim.api.nvim_get_current_win()   -- %{} runs in the window whose bar is drawn
   local buf, pos = vim.api.nvim_win_get_buf(win), vim.api.nvim_win_get_cursor(win)
@@ -30,11 +40,13 @@ function _G.key_hint_bar()
   local bar = ''
   if tonumber(vim.g.actual_curwin) == win then   -- the window the cursor is in
     local mode = vim.api.nvim_get_mode().mode:sub(1, 1)
-    bar = ' ' .. (modes[mode] or mode) .. ' '
-    local room = vim.api.nvim_win_get_width(win) - vim.api.nvim_strwidth(bar .. right)
-    for _, hint in ipairs(hints[({ V = 'v', ['\22'] = 'v' })[mode] or mode] or {}) do
-      if #hint + 2 > room then break end
-      bar, room = bar .. ' ' .. hint .. ' ', room - #hint - 2
+    bar = '%#KeyHintMode# ' .. (modes[mode] or mode) .. ' %*'
+    local room = vim.api.nvim_win_get_width(win) - vim.api.nvim_strwidth(' ' .. (modes[mode] or mode) .. ' ' .. right)
+    for i, hint in ipairs(hints[({ V = 'v', ['\22'] = 'v' })[mode] or mode] or {}) do
+      local sep = i > 1 and ' │ ' or '  '
+      local width = vim.api.nvim_strwidth(sep .. hint[1] .. ' ' .. hint[2])
+      if width + 1 > room then break end
+      bar, room = bar .. '%#KeyHintSep#' .. sep .. '%#KeyHintKey#' .. hint[1] .. '%* ' .. hint[2], room - width
     end
   end
   return (bar .. '%=' .. right:gsub('%%', '%%%%'))
