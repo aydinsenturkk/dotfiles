@@ -1,6 +1,6 @@
 -- Neovim for quick edits, commit messages and reading code. Not an IDE: no LSP, completion or file tree.
 -- Learning: press a key such as g, z, d or Space and wait; which-key lists what can follow.
---   Space ?  cheat sheet   Space k  search every key map   Space h  search help   vimtutor tr  Turkish tutorial
+--   Space c  cheat sheet   Space k  search every key map   Space h  search help   vimtutor tr  Turkish tutorial
 
 vim.g.mapleader = ' '
 
@@ -22,7 +22,7 @@ vim.keymap.set({ 'n', 'x', 'o' }, '\u{FC}', ']', { remap = true })
 -- Keys are bold in the accent color, hints are split by │, and hints that don't fit are dropped from the end.
 -- Inactive windows show only the right part.
 local hints = {
-  n = { { 'i', 'insert' }, { ':w', 'save' }, { ':q', 'quit' }, { 'Space ?', 'cheat sheet' }, { 'u', 'undo' },
+  n = { { 'i', 'insert' }, { ':w', 'save' }, { ':q', 'quit' }, { 'Space c', 'cheat sheet' }, { 'u', 'undo' },
     { '/', 'search' }, { 'v', 'select' }, { 'dd', 'delete line' }, { 'yy', 'copy line' }, { 'p', 'paste' } },
   i = { { 'Esc', 'normal mode' }, { 'Ctrl+W', 'delete word' }, { 'Ctrl+U', 'delete to line start' } },
   v = { { 'y', 'copy' }, { 'd', 'delete' }, { 'c', 'change' }, { '>', 'indent' }, { '<', 'unindent' }, { 'Esc', 'cancel' } },
@@ -105,10 +105,10 @@ map('r', fzf.oldfiles, 'Recent files')
 map('k', fzf.keymaps, 'Search key maps')
 map('h', fzf.helptags, 'Search help')
 
--- Space ?: the basic keys (cheatsheet.txt) in a floating window. The cursor stays in the file and the next key
+-- Space c: the basic keys (cheatsheet.txt) in a floating window. The cursor stays in the file and the next key
 -- closes the sheet and still runs (Space f, j, ...); q and Esc only close it.
 local sheet_keys = vim.api.nvim_create_namespace('cheat_sheet')
-map('?', function()
+map('c', function()
   local lines = vim.fn.readfile(vim.fn.stdpath('config') .. '/cheatsheet.txt')
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)

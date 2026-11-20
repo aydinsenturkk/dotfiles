@@ -96,10 +96,11 @@ nvim_lua() { nvim --headless -c "lua $1" +qa 2>&1; }
 }
 
 @test "leader maps exist and have descriptions for which-key" {
-  for k in f g b r k h '?'; do
+  for k in f g b r k h c; do
     out=$(nvim_lua "io.write(vim.fn.maparg(' $k', 'n', false, true).desc or '')")
     [ -n "$out" ] || { echo "no desc for <leader>$k"; false; }
   done
+  [ -z "$(nvim_lua "io.write(vim.fn.maparg(' ?', 'n'))")" ]   # the sheet moved to Space c: ? sits on another key per layout
 }
 
 @test "treesitter highlights TypeScript" {
@@ -155,7 +156,7 @@ BAR='vim.api.nvim_eval_statusline(vim.o.statusline, {}).str'
     -c "lua vim.api.nvim_feedkeys(vim.keycode('i<Cmd>lua io.write($BAR, \"|\")<CR><Esc>'), 'x', false)" \
     -c "lua vim.api.nvim_feedkeys('v', 'x', false); io.write($BAR)" +qa! "$f" 2>&1)
   IFS='|' read -r normal insert visual <<<"$out"
-  [[ "$normal" == *":w save"* && "$normal" == *"Space ? cheat sheet"* && "$normal" == *"$(basename "$f")"* ]] || { echo "normal: $normal"; false; }
+  [[ "$normal" == *":w save"* && "$normal" == *"Space c cheat sheet"* && "$normal" == *"$(basename "$f")"* ]] || { echo "normal: $normal"; false; }
   [[ "$insert" == *"Esc normal mode"* && "$insert" != *":w save"* ]] || { echo "insert: $insert"; false; }
   [[ "$visual" == *"y copy"* && "$visual" != *":w save"* ]] || { echo "visual: $visual"; false; }
 }
@@ -177,8 +178,8 @@ BAR='vim.api.nvim_eval_statusline(vim.o.statusline, {}).str'
   grep -aq 'delete word' "$t/out" || { echo "insert-mode hints were never drawn"; false; }
 }
 
-@test "Space ? opens the cheat sheet in a floating window; the cursor stays in the file; q only closes it" {
-  out=$(nvim_lua "vim.fn.maparg(' ?', 'n', false, true).callback(); local sheet; for _, w in ipairs(vim.api.nvim_list_wins()) do if vim.api.nvim_win_get_config(w).relative ~= '' then sheet = w end end; local b = vim.api.nvim_win_get_buf(sheet); local text = vim.fn.readfile(vim.fn.stdpath('config') .. '/cheatsheet.txt'); io.write(tostring(vim.api.nvim_get_current_win() ~= sheet), '|', tostring(vim.deep_equal(vim.api.nvim_buf_get_lines(b, 0, -1, false), text) and #text > 10), '|', tostring(vim.bo[b].modifiable), '|', tostring(vim.wo[sheet].number or vim.wo[sheet].relativenumber), '|'); vim.api.nvim_feedkeys('q', 'xt', false); vim.wait(50); io.write(#vim.api.nvim_list_wins(), '|', vim.fn.reg_recording())")
+@test "Space c opens the cheat sheet in a floating window; the cursor stays in the file; q only closes it" {
+  out=$(nvim_lua "vim.fn.maparg(' c', 'n', false, true).callback(); local sheet; for _, w in ipairs(vim.api.nvim_list_wins()) do if vim.api.nvim_win_get_config(w).relative ~= '' then sheet = w end end; local b = vim.api.nvim_win_get_buf(sheet); local text = vim.fn.readfile(vim.fn.stdpath('config') .. '/cheatsheet.txt'); io.write(tostring(vim.api.nvim_get_current_win() ~= sheet), '|', tostring(vim.deep_equal(vim.api.nvim_buf_get_lines(b, 0, -1, false), text) and #text > 10), '|', tostring(vim.bo[b].modifiable), '|', tostring(vim.wo[sheet].number or vim.wo[sheet].relativenumber), '|'); vim.api.nvim_feedkeys('q', 'xt', false); vim.wait(50); io.write(#vim.api.nvim_list_wins(), '|', vim.fn.reg_recording())")
   [ "$out" = "true|true|false|false|1|" ] || { echo "$out"; false; }
 }
 
@@ -193,20 +194,20 @@ BAR='vim.api.nvim_eval_statusline(vim.o.statusline, {}).str'
 }
 
 @test "cheat sheet fits an 80x24 terminal" {
-  out=$(nvim --headless -c 'set columns=80 lines=24' -c "lua vim.fn.maparg(' ?', 'n', false, true).callback(); local sheet; for _, w in ipairs(vim.api.nvim_list_wins()) do if vim.api.nvim_win_get_config(w).relative ~= '' then sheet = w end end; local lines, w = vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(sheet), 0, -1, false), 0; for _, l in ipairs(lines) do w = math.max(w, vim.fn.strdisplaywidth(l)) end; io.write(vim.api.nvim_win_get_height(sheet), 'x', vim.api.nvim_win_get_width(sheet), ' for ', #lines, 'x', w)" +qa! 2>&1)
+  out=$(nvim --headless -c 'set columns=80 lines=24' -c "lua vim.fn.maparg(' c', 'n', false, true).callback(); local sheet; for _, w in ipairs(vim.api.nvim_list_wins()) do if vim.api.nvim_win_get_config(w).relative ~= '' then sheet = w end end; local lines, w = vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(sheet), 0, -1, false), 0; for _, l in ipairs(lines) do w = math.max(w, vim.fn.strdisplaywidth(l)) end; io.write(vim.api.nvim_win_get_height(sheet), 'x', vim.api.nvim_win_get_width(sheet), ' for ', #lines, 'x', w)" +qa! 2>&1)
   read -r h x w _ n x2 m <<<"${out//x/ x }"
   [ "$h" -ge "$n" ] && [ "$w" -ge "$m" ] || { echo "window $out"; false; }
 }
 
 @test "the next key closes the cheat sheet and still runs (Space f opens the picker as usual)" {
-  out=$(nvim_lua "vim.api.nvim_buf_set_lines(0, 0, -1, false, { 'a', 'b' }); vim.fn.maparg(' ?', 'n', false, true).callback(); vim.api.nvim_feedkeys('j', 'xt', false); vim.wait(50); io.write(vim.fn.line('.'), '|', #vim.api.nvim_list_wins()); vim.cmd('qa!')")
+  out=$(nvim_lua "vim.api.nvim_buf_set_lines(0, 0, -1, false, { 'a', 'b' }); vim.fn.maparg(' c', 'n', false, true).callback(); vim.api.nvim_feedkeys('j', 'xt', false); vim.wait(50); io.write(vim.fn.line('.'), '|', #vim.api.nvim_list_wins()); vim.cmd('qa!')")
   [ "$out" = "2|1" ] || { echo "line|windows: $out"; false; }
 }
 
 @test "bottom bar keeps the hints for a file deep in a long path" {
   d=$(mktemp -d)/a/very/deep/directory/tree/with/many/levels/for/this/test; mkdir -p "$d"; echo x > "$d/file.ts"
   out=$(nvim --headless -c 'set columns=100' -c "lua io.write($BAR)" +qa! "$d/file.ts" 2>&1)
-  [[ "$out" == *"Space ? cheat sheet"* && "$out" == *"file.ts"* ]] || { echo "$out"; false; }
+  [[ "$out" == *"Space c cheat sheet"* && "$out" == *"file.ts"* ]] || { echo "$out"; false; }
 }
 
 # Turkish Q keyboard. Keys are fed as typed ('t', nvim_input): langmap leaves keys that come from mappings alone.
