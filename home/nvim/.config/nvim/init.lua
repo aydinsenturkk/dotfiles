@@ -34,7 +34,9 @@ vim.api.nvim_create_autocmd('ColorScheme', { callback = hint_colors })
 function _G.key_hint_bar()
   local win = vim.api.nvim_get_current_win()   -- %{} runs in the window whose bar is drawn
   local buf, pos = vim.api.nvim_win_get_buf(win), vim.api.nvim_win_get_cursor(win)
-  local name = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buf), ':~:.')
+  local name, max = vim.fn.fnamemodify(vim.api.nvim_buf_get_name(buf), ':~:.'), vim.api.nvim_win_get_width(win) / 3
+  if vim.api.nvim_strwidth(name) > max then name = vim.fn.pathshorten(name) end   -- long path: leave room for hints
+  if vim.api.nvim_strwidth(name) > max then name = vim.fn.fnamemodify(name, ':t') end
   local right = (name == '' and '[No Name]' or name) .. (vim.bo[buf].modified and ' [+]' or '')
     .. '  ' .. pos[1] .. ':' .. pos[2] + 1 .. ' '
   local bar = ''
@@ -96,16 +98,22 @@ map('r', fzf.oldfiles, 'Recent files')
 map('k', fzf.keymaps, 'Search key maps')
 map('h', fzf.helptags, 'Search help')
 
--- Space ?: the basic keys (cheatsheet.txt) in a floating window; q or Esc closes it.
+-- Space ?: the basic keys (cheatsheet.txt) in a floating window. The cursor stays in the file and the next key
+-- closes the sheet and still runs (Space f, j, ...); q and Esc only close it.
+local sheet_keys = vim.api.nvim_create_namespace('cheat_sheet')
 map('?', function()
   local lines = vim.fn.readfile(vim.fn.stdpath('config') .. '/cheatsheet.txt')
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.bo[buf].modifiable, vim.bo[buf].bufhidden = false, 'wipe'
-  local width = math.min(vim.o.columns - 4, math.max(unpack(vim.tbl_map(vim.fn.strdisplaywidth, lines))))
+  local width = math.min(vim.o.columns - 2, math.max(unpack(vim.tbl_map(vim.fn.strdisplaywidth, lines))))
   local height = math.min(vim.o.lines - 4, #lines)
-  vim.api.nvim_open_win(buf, true, { relative = 'editor', width = width, height = height, style = 'minimal',
+  local win = vim.api.nvim_open_win(buf, false, { relative = 'editor', width = width, height = height, style = 'minimal',
     row = math.floor((vim.o.lines - height) / 2), col = math.floor((vim.o.columns - width) / 2),
-    border = 'rounded', title = ' Cheat sheet  (q closes) ', title_pos = 'center' })
-  for _, key in ipairs({ 'q', '<Esc>' }) do vim.keymap.set('n', key, '<Cmd>close<CR>', { buffer = buf }) end
+    border = 'rounded', title = ' Cheat sheet  (any key closes) ', title_pos = 'center' })
+  vim.on_key(function(key)
+    vim.on_key(nil, sheet_keys)
+    vim.schedule(function() if vim.api.nvim_win_is_valid(win) then vim.api.nvim_win_close(win, true) end end)
+    if key == 'q' or key == vim.keycode('<Esc>') then return '' end   -- '' drops the key
+  end, sheet_keys)
 end, 'Cheat sheet of the basic keys')

@@ -177,9 +177,9 @@ BAR='vim.api.nvim_eval_statusline(vim.o.statusline, {}).str'
   grep -aq 'delete word' "$t/out" || { echo "insert-mode hints were never drawn"; false; }
 }
 
-@test "Space ? opens the cheat sheet in a floating window and q closes it" {
-  out=$(nvim_lua "vim.fn.maparg(' ?', 'n', false, true).callback(); local sheet = vim.fn.readfile(vim.fn.stdpath('config') .. '/cheatsheet.txt'); io.write(vim.api.nvim_win_get_config(0).relative, '|', tostring(vim.deep_equal(vim.api.nvim_buf_get_lines(0, 0, -1, false), sheet) and #sheet > 10), '|', tostring(vim.bo.modifiable), '|', tostring(vim.wo.number or vim.wo.relativenumber), '|'); vim.api.nvim_feedkeys('q', 'x', false); io.write(#vim.api.nvim_list_wins())")
-  [ "$out" = "editor|true|false|false|1" ] || { echo "$out"; false; }
+@test "Space ? opens the cheat sheet in a floating window; the cursor stays in the file; q only closes it" {
+  out=$(nvim_lua "vim.fn.maparg(' ?', 'n', false, true).callback(); local sheet; for _, w in ipairs(vim.api.nvim_list_wins()) do if vim.api.nvim_win_get_config(w).relative ~= '' then sheet = w end end; local b = vim.api.nvim_win_get_buf(sheet); local text = vim.fn.readfile(vim.fn.stdpath('config') .. '/cheatsheet.txt'); io.write(tostring(vim.api.nvim_get_current_win() ~= sheet), '|', tostring(vim.deep_equal(vim.api.nvim_buf_get_lines(b, 0, -1, false), text) and #text > 10), '|', tostring(vim.bo[b].modifiable), '|', tostring(vim.wo[sheet].number or vim.wo[sheet].relativenumber), '|'); vim.api.nvim_feedkeys('q', 'xt', false); vim.wait(50); io.write(#vim.api.nvim_list_wins(), '|', vim.fn.reg_recording())")
+  [ "$out" = "true|true|false|false|1|" ] || { echo "$out"; false; }
 }
 
 @test "cheat sheet is linked into the repo" {
@@ -190,4 +190,21 @@ BAR='vim.api.nvim_eval_statusline(vim.o.statusline, {}).str'
   # after a colorscheme reload too: it clears the groups the config made
   out=$(nvim_lua "vim.cmd.colorscheme('default'); local s = vim.api.nvim_eval_statusline(vim.o.statusline, { highlights = true }); local at, group = s.str:find(':w save', 1, true) - 1; for _, h in ipairs(s.highlights) do if h.start <= at then group = h.group end end; local key, bar = vim.api.nvim_get_hl(0, { name = group, link = false }), vim.api.nvim_get_hl(0, { name = 'StatusLine', link = false }); io.write(tostring(key.fg ~= nil and key.fg ~= bar.fg and key.bg == bar.bg), '|', tostring(s.str:find('save │ :q quit', 1, true) ~= nil))")
   [ "$out" = "true|true" ] || { echo "$out"; false; }
+}
+
+@test "cheat sheet fits an 80x24 terminal" {
+  out=$(nvim --headless -c 'set columns=80 lines=24' -c "lua vim.fn.maparg(' ?', 'n', false, true).callback(); local sheet; for _, w in ipairs(vim.api.nvim_list_wins()) do if vim.api.nvim_win_get_config(w).relative ~= '' then sheet = w end end; local lines, w = vim.api.nvim_buf_get_lines(vim.api.nvim_win_get_buf(sheet), 0, -1, false), 0; for _, l in ipairs(lines) do w = math.max(w, vim.fn.strdisplaywidth(l)) end; io.write(vim.api.nvim_win_get_height(sheet), 'x', vim.api.nvim_win_get_width(sheet), ' for ', #lines, 'x', w)" +qa! 2>&1)
+  read -r h x w _ n x2 m <<<"${out//x/ x }"
+  [ "$h" -ge "$n" ] && [ "$w" -ge "$m" ] || { echo "window $out"; false; }
+}
+
+@test "the next key closes the cheat sheet and still runs (Space f opens the picker as usual)" {
+  out=$(nvim_lua "vim.api.nvim_buf_set_lines(0, 0, -1, false, { 'a', 'b' }); vim.fn.maparg(' ?', 'n', false, true).callback(); vim.api.nvim_feedkeys('j', 'xt', false); vim.wait(50); io.write(vim.fn.line('.'), '|', #vim.api.nvim_list_wins()); vim.cmd('qa!')")
+  [ "$out" = "2|1" ] || { echo "line|windows: $out"; false; }
+}
+
+@test "bottom bar keeps the hints for a file deep in a long path" {
+  d=$(mktemp -d)/a/very/deep/directory/tree/with/many/levels/for/this/test; mkdir -p "$d"; echo x > "$d/file.ts"
+  out=$(nvim --headless -c 'set columns=100' -c "lua io.write($BAR)" +qa! "$d/file.ts" 2>&1)
+  [[ "$out" == *"Space ? cheat sheet"* && "$out" == *"file.ts"* ]] || { echo "$out"; false; }
 }
