@@ -35,6 +35,9 @@ local function hint_colors()   -- on the bar's background; loading a colorscheme
   vim.api.nvim_set_hl(0, 'KeyHintMode', { fg = bar.fg, bg = bar.bg, bold = true })
   vim.api.nvim_set_hl(0, 'KeyHintKey', { fg = get('Function').fg, bg = bar.bg, bold = true })
   vim.api.nvim_set_hl(0, 'KeyHintSep', { fg = get('Comment').fg, bg = bar.bg })
+  vim.api.nvim_set_hl(0, 'CheatSheetKey', { fg = get('Function').fg, bold = true })   -- the same, for the cheat sheet
+  vim.api.nvim_set_hl(0, 'CheatSheetHeading', { link = 'Title' })
+  vim.api.nvim_set_hl(0, 'CheatSheetSep', { link = 'Comment' })
 end
 hint_colors()
 vim.api.nvim_create_autocmd('ColorScheme', { callback = hint_colors })
@@ -107,11 +110,43 @@ map('h', fzf.helptags, 'Search help')
 
 -- Space c: the basic keys (cheatsheet.txt) in a floating window. The cursor stays in the file and the next key
 -- closes the sheet and still runs (Space f, j, ...); q and Esc only close it.
-local sheet_keys = vim.api.nvim_create_namespace('cheat_sheet')
+-- cheatsheet.txt: keys are in `backticks`, a line without keys is a heading, and a --- line starts the right column.
+local sheet_ns = vim.api.nvim_create_namespace('cheat_sheet')
+local function sheet_lines()   -- the two columns side by side, split by │, and { row, start, end, group } colors
+  local cols, c = { {}, {} }, 1
+  for _, line in ipairs(vim.fn.readfile(vim.fn.stdpath('config') .. '/cheatsheet.txt')) do
+    if line == '---' then c = 2 else table.insert(cols[c], line) end
+  end
+  local width = 0
+  for _, cell in ipairs(cols[1]) do width = math.max(width, vim.api.nvim_strwidth((cell:gsub('`', '')))) end
+  local lines, marks = {}, {}
+  for i = 1, math.max(#cols[1], #cols[2]) do
+    local row = ' '
+    for side, cell in ipairs({ cols[1][i] or '', cols[2][i] or '' }) do
+      if side == 2 then
+        row = row .. (' '):rep(width + 1 - vim.api.nvim_strwidth(row))
+        table.insert(marks, { i - 1, #row + 1, #row + 4, 'CheatSheetSep' })   -- │ is 3 bytes
+        row = row .. ' │ '
+      end
+      local heading = cell ~= '' and not cell:find('`')
+      for n, part in ipairs(vim.split(cell, '`', { plain = true })) do
+        if heading or n % 2 == 0 then
+          table.insert(marks, { i - 1, #row, #row + #part, heading and 'CheatSheetHeading' or 'CheatSheetKey' })
+        else
+          for at in part:gmatch('()·') do table.insert(marks, { i - 1, #row + at - 1, #row + at + 1, 'CheatSheetSep' }) end
+        end
+        row = row .. part
+      end
+    end
+    lines[i] = row
+  end
+  return lines, marks
+end
 map('c', function()
-  local lines = vim.fn.readfile(vim.fn.stdpath('config') .. '/cheatsheet.txt')
+  local lines, marks = sheet_lines()
   local buf = vim.api.nvim_create_buf(false, true)
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  for _, m in ipairs(marks) do vim.api.nvim_buf_set_extmark(buf, sheet_ns, m[1], m[2], { end_col = m[3], hl_group = m[4] }) end
   vim.bo[buf].modifiable, vim.bo[buf].bufhidden = false, 'wipe'
   local width = math.min(vim.o.columns - 2, math.max(unpack(vim.tbl_map(vim.fn.strdisplaywidth, lines))))
   local height = math.min(vim.o.lines - 4, #lines)
@@ -119,8 +154,8 @@ map('c', function()
     row = math.floor((vim.o.lines - height) / 2), col = math.floor((vim.o.columns - width) / 2),
     border = 'rounded', title = ' Cheat sheet  (any key closes) ', title_pos = 'center' })
   vim.on_key(function(key)
-    vim.on_key(nil, sheet_keys)
+    vim.on_key(nil, sheet_ns)
     vim.schedule(function() if vim.api.nvim_win_is_valid(win) then vim.api.nvim_win_close(win, true) end end)
     if key == 'q' or key == vim.keycode('<Esc>') then return '' end   -- '' drops the key
-  end, sheet_keys)
+  end, sheet_ns)
 end, 'Cheat sheet of the basic keys')

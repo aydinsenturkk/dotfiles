@@ -1,20 +1,41 @@
- MOVE                                   EDIT
- h j k l      left down up right        Esc          back to normal mode
- w / b        next / previous word      i / a        insert before / after
- 0 / $        start / end of line       o / O        new line below / above
- gg / G       first / last line         x            delete a character
- Ctrl+D / U   half a page down / up     dd           delete the line
- %            matching bracket          ciw          change the word
- 5j           5 lines down (any count)  ci"          change inside the quotes
- SELECT AND COPY                        .            repeat the last change
- v / V        select characters / lines u / Ctrl+R   undo / redo
- y / d        copy / cut the selection  SEARCH
- yy           copy the line             /text        search (n / N next, prev)
- p / P        paste after / before      *            search word under cursor
- FILES                                  :%s/a/b/g    replace a with b
- :w           save                      Space g      search in all files
- :q           quit (:q! drops changes)  HELP
- :wq          save and quit             Space        wait for the key menu
- Space f      find a file               Space k      search every key map
- Space b      open buffers              Space h      search help
- Space r      recent files              vimtutor tr  Turkish tutorial (shell)
+MOVE
+`h j k l` left, down, up, right
+`w` next word  ·  `b` previous word
+`0` line start  ·  `$` line end
+`gg` first line  ·  `G` last line
+`Ctrl+D` page down  ·  `Ctrl+U` page up
+`%` matching bracket
+`5j` 5 lines down (any number works)
+
+SELECT AND COPY
+`v` select letters  ·  `V` select lines
+`y` copy  ·  `d` cut  ·  `yy` copy line
+`p` paste after  ·  `P` paste before
+
+FILES
+`:w` save  ·  `:wq` save and quit
+`:q` quit  ·  `:q!` quit, drop changes
+`Space f` find a file
+`Space r` recent files
+`Space b` open files (buffers)
+---
+EDIT
+`Esc` normal mode  ·  `.` repeat change
+`i` insert before  ·  `a` insert after
+`o` new line below  ·  `O` new line above
+`x` delete letter  ·  `dd` delete line
+`ciw` change the word
+`ci"` change inside the quotes
+`u` undo  ·  `Ctrl+R` redo
+
+SEARCH
+`/text` search for text
+`n` next match  ·  `N` previous match
+`*` search the word under the cursor
+`:%s/a/b/g` replace a with b
+`Space g` search text in all files
+
+HELP
+`Space` wait for the key menu
+`Space k` search keys  ·  `Space h` help
+`vimtutor tr` Turkish tutorial (shell)

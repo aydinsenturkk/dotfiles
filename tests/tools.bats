@@ -162,7 +162,7 @@ BAR='vim.api.nvim_eval_statusline(vim.o.statusline, {}).str'
 }
 
 @test "bottom bar drops the hints that do not fit instead of cutting the line" {
-  out=$(nvim --headless -c 'set columns=50' -c "lua local s = vim.api.nvim_eval_statusline(vim.o.statusline, {}); io.write(s.width, '|', s.str)" +qa! "$REPO/README.md" 2>&1)
+  out=$(nvim --headless -n -c 'set columns=50' -c "lua local s = vim.api.nvim_eval_statusline(vim.o.statusline, {}); io.write(s.width, '|', s.str)" +qa! "$REPO/README.md" 2>&1)
   IFS='|' read -r width bar <<<"$out"
   [ "$width" -le 50 ] && [[ "$bar" == *"README.md"* && "$bar" == *"i insert"* && "$bar" != *"<"* ]] || { echo "$out"; false; }
 }
@@ -179,7 +179,7 @@ BAR='vim.api.nvim_eval_statusline(vim.o.statusline, {}).str'
 }
 
 @test "Space c opens the cheat sheet in a floating window; the cursor stays in the file; q only closes it" {
-  out=$(nvim_lua "vim.fn.maparg(' c', 'n', false, true).callback(); local sheet; for _, w in ipairs(vim.api.nvim_list_wins()) do if vim.api.nvim_win_get_config(w).relative ~= '' then sheet = w end end; local b = vim.api.nvim_win_get_buf(sheet); local text = vim.fn.readfile(vim.fn.stdpath('config') .. '/cheatsheet.txt'); io.write(tostring(vim.api.nvim_get_current_win() ~= sheet), '|', tostring(vim.deep_equal(vim.api.nvim_buf_get_lines(b, 0, -1, false), text) and #text > 10), '|', tostring(vim.bo[b].modifiable), '|', tostring(vim.wo[sheet].number or vim.wo[sheet].relativenumber), '|'); vim.api.nvim_feedkeys('q', 'xt', false); vim.wait(50); io.write(#vim.api.nvim_list_wins(), '|', vim.fn.reg_recording())")
+  out=$(nvim_lua "vim.fn.maparg(' c', 'n', false, true).callback(); local sheet; for _, w in ipairs(vim.api.nvim_list_wins()) do if vim.api.nvim_win_get_config(w).relative ~= '' then sheet = w end end; local b = vim.api.nvim_win_get_buf(sheet); local text = table.concat(vim.api.nvim_buf_get_lines(b, 0, -1, false), ' '); io.write(tostring(vim.api.nvim_get_current_win() ~= sheet), '|', tostring(text:find('Space f find a file', 1, true) ~= nil and vim.api.nvim_buf_line_count(b) > 10), '|', tostring(vim.bo[b].modifiable), '|', tostring(vim.wo[sheet].number or vim.wo[sheet].relativenumber), '|'); vim.api.nvim_feedkeys('q', 'xt', false); vim.wait(50); io.write(#vim.api.nvim_list_wins(), '|', vim.fn.reg_recording())")
   [ "$out" = "true|true|false|false|1|" ] || { echo "$out"; false; }
 }
 
@@ -191,6 +191,11 @@ BAR='vim.api.nvim_eval_statusline(vim.o.statusline, {}).str'
   # after a colorscheme reload too: it clears the groups the config made
   out=$(nvim_lua "vim.cmd.colorscheme('default'); local s = vim.api.nvim_eval_statusline(vim.o.statusline, { highlights = true }); local at, group = s.str:find(':w save', 1, true) - 1; for _, h in ipairs(s.highlights) do if h.start <= at then group = h.group end end; local key, bar = vim.api.nvim_get_hl(0, { name = group, link = false }), vim.api.nvim_get_hl(0, { name = 'StatusLine', link = false }); io.write(tostring(key.fg ~= nil and key.fg ~= bar.fg and key.bg == bar.bg), '|', tostring(s.str:find('save │ :q quit', 1, true) ~= nil))")
   [ "$out" = "true|true" ] || { echo "$out"; false; }
+}
+
+@test "cheat sheet puts each key in color next to its own description, with headings and lined-up columns" {
+  out=$(nvim_lua "vim.fn.maparg(' c', 'n', false, true).callback(); local sheet; for _, w in ipairs(vim.api.nvim_list_wins()) do if vim.api.nvim_win_get_config(w).relative ~= '' then sheet = w end end; local b = vim.api.nvim_win_get_buf(sheet); local lines, marks = vim.api.nvim_buf_get_lines(b, 0, -1, false), vim.api.nvim_buf_get_extmarks(b, -1, 0, -1, { details = true }); local function hl(r, c) for _, m in ipairs(marks) do if m[2] == r and c >= m[3] and c < m[4].end_col then return m[4].hl_group end end return '-' end; local r, c; for i, l in ipairs(lines) do local s = l:find('w next word', 1, true); if s then r, c = i - 1, s - 1 end end; local bar = lines[r + 1]:find('│', 1, true) - 1; io.write(hl(r, c), '|', hl(r, c + 2), '|', hl(0, 1), '|', hl(r, bar), '|'); local col, same, plain; same, plain = true, true; for _, l in ipairs(lines) do local s = l:find('│', 1, true); local w = s and vim.fn.strdisplaywidth(l:sub(1, s - 1)); col = col or w; same = same and w == col; plain = plain and not l:find('\`', 1, true) and not l:find(' / ', 1, true) end; io.write(tostring(same), '|', tostring(plain))")
+  [ "$out" = "CheatSheetKey|-|CheatSheetHeading|CheatSheetSep|true|true" ] || { echo "key|description|heading|divider|columns line up|no backticks or a / b pairs: $out"; false; }
 }
 
 @test "cheat sheet fits an 80x24 terminal" {
