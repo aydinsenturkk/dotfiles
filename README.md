@@ -23,7 +23,7 @@ linked into `~` with GNU Stow, and everything is covered by tests.
 | `home/git` | `~/.config/git/config` (identity, GitHub credentials via gh, delta pager, pull rebase), global ignore |
 | `home/ghostty` | Ghostty: GitHub Dark Default, JetBrains Mono 16, roomy spacing |
 | `home/starship` | Prompt |
-| `home/nvim` | Neovim for quick edits and reading code: key hints (which-key), Tree-sitter highlighting, fzf search |
+| `home/nvim` | Neovim for quick edits and reading code: key hints (bottom bar, cheat sheet, which-key), Tree-sitter highlighting, fzf search |
 | `home/mise` | Node LTS, pnpm, Go, Bun, yarn 1, NestJS CLI |
 | `tests/` | bats tests |
 
@@ -83,7 +83,7 @@ After the first run:
   the prompt shows the active profile and region. `mise.local.toml` is in the global git ignore, so it never gets committed.
 - **Ghostty config:** open it with Cmd+, (it is the repo file), save, then Ghostty menu → Reload Configuration. Spacing changes only show in a new window. No second config under `~/.config/ghostty/`.
 - **macOS preferences:** add a `defaults write` line to `macos.sh` and run `./macos.sh`.
-- **Neovim** (`EDITOR`; `vim` runs it): press Space and wait for key hints; Space k searches every key map. Tutorial: `vimtutor tr`.
+- **Neovim** (`EDITOR`; `vim` runs it): the bottom bar shows the basic keys of the mode; Space ? opens a cheat sheet; press Space and wait for key hints; Space k searches every key map. Tutorial: `vimtutor tr`.
 - **Machine-specific settings:** `~/.zshrc.local` (not in the repo, loaded last).
 
 ## Secrets

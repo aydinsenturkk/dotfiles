@@ -1,0 +1,23 @@
+ MOVE                                   EDIT
+ h j k l     left down up right         Esc         back to normal mode
+ w / b       next / previous word       i / a       insert before / after
+ 0 / $       start / end of line        o / O       new line below / above
+ gg / G      first / last line          x           delete a character
+ Ctrl+D / U  half a page down / up      dd          delete the line
+ %           matching bracket           ciw         change the word
+ 5j          5 lines down (any count)   ci"         change inside the quotes
+                                        .           repeat the last change
+                                        u / Ctrl+R  undo / redo
+
+ SELECT AND COPY                        SEARCH
+ v / V       select characters / lines  /text       search (n / N next, prev)
+ y / d       copy / cut the selection   *           search word under cursor
+ yy          copy the line              :%s/a/b/g   replace a with b
+ p / P       paste after / before       Space g     search in all files
+
+ FILES                                  HELP
+ :w          save                       Space       wait for the key menu
+ :q          quit (:q! drops changes)   Space f     find a file
+ :wq         save and quit              Space k     search every key map
+ Space b     open buffers               Space h     search help
+ Space r     recent files               vimtutor tr  Turkish tutorial (shell)

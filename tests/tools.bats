@@ -96,7 +96,7 @@ nvim_lua() { nvim --headless -c "lua $1" +qa 2>&1; }
 }
 
 @test "leader maps exist and have descriptions for which-key" {
-  for k in f g b r k h; do
+  for k in f g b r k h '?'; do
     out=$(nvim_lua "io.write(vim.fn.maparg(' $k', 'n', false, true).desc or '')")
     [ -n "$out" ] || { echo "no desc for <leader>$k"; false; }
   done
@@ -144,4 +144,44 @@ nvim_lua() { nvim --headless -c "lua $1" +qa 2>&1; }
   out=$(nvim --headless -c "lua vim.api.nvim_create_user_command('TSUpdate', function() io.write('TSUpdate ran') end, { force = true })" \
     -c "lua vim.api.nvim_exec_autocmds('PackChanged', { data = { kind = 'update', active = true, spec = { name = 'nvim-treesitter' }, path = '' } })" +qa 2>&1)
   [[ "$out" == *"TSUpdate ran"* ]] || { echo "$out"; false; }
+}
+
+# Bottom bar: the status line as Neovim draws it for the current window
+BAR='vim.api.nvim_eval_statusline(vim.o.statusline, {}).str'
+
+@test "bottom bar shows the keys of the current mode and the file name" {
+  f=$(mktemp).ts; echo 'let x = 1' > "$f"
+  out=$(nvim --headless -c "set columns=200" -c "lua io.write($BAR, '|')" \
+    -c "lua vim.api.nvim_feedkeys(vim.keycode('i<Cmd>lua io.write($BAR, \"|\")<CR><Esc>'), 'x', false)" \
+    -c "lua vim.api.nvim_feedkeys('v', 'x', false); io.write($BAR)" +qa! "$f" 2>&1)
+  IFS='|' read -r normal insert visual <<<"$out"
+  [[ "$normal" == *":w save"* && "$normal" == *"Space ? cheat sheet"* && "$normal" == *"$(basename "$f")"* ]] || { echo "normal: $normal"; false; }
+  [[ "$insert" == *"Esc normal mode"* && "$insert" != *":w save"* ]] || { echo "insert: $insert"; false; }
+  [[ "$visual" == *"y copy"* && "$visual" != *":w save"* ]] || { echo "visual: $visual"; false; }
+}
+
+@test "bottom bar drops the hints that do not fit instead of cutting the line" {
+  out=$(nvim --headless -c 'set columns=50' -c "lua local s = vim.api.nvim_eval_statusline(vim.o.statusline, {}); io.write(s.width, '|', s.str)" +qa! "$REPO/README.md" 2>&1)
+  IFS='|' read -r width bar <<<"$out"
+  [ "$width" -le 50 ] && [[ "$bar" == *"README.md"* && "$bar" == *"i insert"* && "$bar" != *"<"* ]] || { echo "$out"; false; }
+}
+
+@test "bottom bar of an inactive window shows no key hints" {
+  out=$(nvim_lua "vim.cmd('split'); io.write(vim.api.nvim_eval_statusline(vim.o.statusline, { winid = vim.fn.win_getid(2) }).str)")
+  [[ -n "$out" && "$out" != *":w save"* ]] || { echo "$out"; false; }
+}
+
+@test "bottom bar changes with the mode in a real terminal" {
+  t=$(mktemp -d)   # nvim in a pty: press i, then leave; the insert hints must be drawn
+  (sleep 2; printf i; sleep 1; printf '\033:qa!\r') | perl -e 'alarm 20; exec @ARGV' script -q "$t/out" nvim "$REPO/README.md" >/dev/null 2>&1
+  grep -aq 'Esc normal mode' "$t/out" || { echo "insert-mode hints were never drawn"; false; }
+}
+
+@test "Space ? opens the cheat sheet in a floating window and q closes it" {
+  out=$(nvim_lua "vim.fn.maparg(' ?', 'n', false, true).callback(); local sheet = vim.fn.readfile(vim.fn.stdpath('config') .. '/cheatsheet.txt'); io.write(vim.api.nvim_win_get_config(0).relative, '|', tostring(vim.deep_equal(vim.api.nvim_buf_get_lines(0, 0, -1, false), sheet) and #sheet > 10), '|', tostring(vim.bo.modifiable), '|', tostring(vim.wo.number or vim.wo.relativenumber), '|'); vim.api.nvim_feedkeys('q', 'x', false); io.write(#vim.api.nvim_list_wins())")
+  [ "$out" = "editor|true|false|false|1" ] || { echo "$out"; false; }
+}
+
+@test "cheat sheet is linked into the repo" {
+  [ "$(readlink -f "$HOME/.config/nvim/cheatsheet.txt")" = "$REPO/home/nvim/.config/nvim/cheatsheet.txt" ]
 }
